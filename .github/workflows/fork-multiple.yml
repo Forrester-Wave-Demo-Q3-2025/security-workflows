@@ -49,9 +49,6 @@ jobs:
           $org = '${{ github.event.inputs.org }}'
           $repo = '${{ github.event.inputs.repo }}'
 
-          # Clone the repo
-          git clone $repoUrl
-
           for ($i = 1; $i -le $numForks; $i++) {
             $suffix = $i.ToString('000')
             $forkName = "$prefix-$suffix"

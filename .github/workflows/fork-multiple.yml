@@ -1,0 +1,53 @@
+name: Fork Repo
+
+on:
+  workflow_dispatch:
+    inputs:
+      num_forks:
+        description: 'Number of forks to create'
+        required: true
+        default: '3'
+      name_prefix:
+        description: 'Prefix for fork names'
+        required: false
+        default: 'WG'
+      org:
+        description: 'Target organization for forks'
+        required: true
+        default: 'Forrester-Wave-Demo-Q3-2025'
+      repo_url:
+        description: 'Repository URL to fork'
+        required: false
+        default: 'https://github.com/Forrester-Wave-Demo-Q3-2025/WebGoat'
+
+jobs:
+  fork-multiple:
+    runs-on: ubuntu-latest
+    steps:
+      # - name: Set up GitHub CLI
+      #   uses: actions/setup-gh@v4
+
+      # - name: Install PowerShell
+      #   uses: PowerShell/PowerShell@v1
+      #   with:
+      #     pwsh-version: '7.2.0'
+
+      - name: Run PowerShell to clone and fork
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $numForks = [int]('${{ github.event.inputs.num_forks }}')
+          $prefix = '${{ github.event.inputs.name_prefix }}'
+          $org = '${{ github.event.inputs.org }}'
+          $repoUrl = '${{ github.event.inputs.repo_url }}'
+
+          # Clone the repo
+          git clone $repoUrl
+
+          for ($i = 1; $i -le $numForks; $i++) {
+            $suffix = $i.ToString('000')
+            $forkName = "$prefix-$suffix"
+            echo "Creating fork: $forkName"
+            gh repo fork Forrester-Wave-Demo-Q3-2025/WebGoat --org $org --name $forkName --clone=false --remote=false
+          }

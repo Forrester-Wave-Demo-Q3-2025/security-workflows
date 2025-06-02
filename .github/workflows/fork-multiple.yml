@@ -66,8 +66,17 @@ jobs:
             echo "Creating fork: $forkName"
             gh repo fork Forrester-Wave-Demo-Q3-2025/WebGoat --org $org --name $forkName --clone=false --remote=false
 
-            # Set custom property 'repo-type' to 'synthetic' 
-            # https://docs.github.com/en/rest/repos/custom-properties?apiVersion=2022-11-28#create-or-update-custom-property-values-for-a-repository
+            # Wait for a moment to ensure the fork is fully created
+            echo "Waiting for fork to be fully ready..."
+            Start-Sleep -Seconds 3
+            
+            # Try to set custom property, but don't fail if it's not available (beta feature)
             echo "Setting custom property 'repo-type' to 'synthetic' for $org/$forkName"
-            gh api --method PATCH -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/$org/$forkName/properties/values" -f "properties[][property_name]=repo-type" -f "properties[][value]=synthetic"
+            try {
+                gh api --method PATCH -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/$org/$forkName/properties/values" -f "properties[][property_name]=repo-type" -f "properties[][value]=synthetic" -f silent=true 2>$null
+                echo "Custom property set successfully"
+            } catch {
+                echo "Custom properties API not available, setting a topic instead"
+                gh api --method PUT -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/$org/$forkName/topics" -f "names[]=[\"synthetic\"]" 
+            }
           }

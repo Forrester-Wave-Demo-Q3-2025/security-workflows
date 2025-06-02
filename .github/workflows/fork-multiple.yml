@@ -69,11 +69,5 @@ jobs:
             # Set custom property 'repo-type' to 'synthetic' 
             # https://docs.github.com/en/rest/repos/custom-properties?apiVersion=2022-11-28#create-or-update-custom-property-values-for-a-repository
             echo "Setting custom property 'repo-type' to 'synthetic' for $org/$forkName"
-            gh api \
-              --method PATCH \
-              -H "Accept: application/vnd.github+json" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              "/repos/$org/$forkName/properties/values" \
-              -f "properties[][property_name]=repo-type" \
-              -f "properties[][value]=synthetic"
+            gh api --method PATCH -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/$org/$forkName/properties/values" -f "properties[][property_name]=repo-type" -f "properties[][value]=synthetic"
           }

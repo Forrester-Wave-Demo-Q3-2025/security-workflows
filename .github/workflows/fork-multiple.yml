@@ -1,3 +1,18 @@
+# -------------------------------------------------------------
+# Required GitHub Token Permissions for this workflow:
+#
+# For the secret used as GH_TOKEN, ensure the following scopes:
+#
+# 1. Administration (Read and write)
+# 2. Metadata (Read-only)
+# 3. Custom properties (Read and write)
+#
+# If using an organization-level token, ensure the token has:
+# - Custom properties permission for the organization
+#
+# These permissions are required to allow the workflow to create forks
+# in the organization and manage repository properties.
+# -------------------------------------------------------------
 name: Fork Repo
 
 on:
@@ -35,7 +50,7 @@ jobs:
       - name: Run PowerShell to clone and fork
         shell: pwsh
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.FORK_TOKEN }}
         run: |
           $numForks = [int]('${{ github.event.inputs.num_forks }}')
           $prefix = '${{ github.event.inputs.name_prefix }}'
@@ -50,4 +65,15 @@ jobs:
             $forkName = "$prefix-$suffix"
             echo "Creating fork: $forkName"
             gh repo fork Forrester-Wave-Demo-Q3-2025/WebGoat --org $org --name $forkName --clone=false --remote=false
+
+            # Set custom property 'repo-type' to 'synthetic' 
+            # https://docs.github.com/en/rest/repos/custom-properties?apiVersion=2022-11-28#create-or-update-custom-property-values-for-a-repository
+            echo "Setting custom property 'repo-type' to 'synthetic' for $org/$forkName"
+            gh api \
+              --method PATCH \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "/repos/$org/$forkName/properties/values" \
+              -f "properties[][property_name]=repo-type" \
+              -f "properties[][value]=synthetic"
           }

@@ -30,23 +30,15 @@ on:
         description: 'Target organization for forks'
         required: true
         default: 'Forrester-Wave-Demo-Q3-2025'
-      repo_url:
+      repo:
         description: 'Repository URL to fork'
         required: false
-        default: 'https://github.com/Forrester-Wave-Demo-Q3-2025/WebGoat'
+        default: 'Forrester-Wave-Demo-Q3-2025/WebGoat'
 
 jobs:
   fork-multiple:
     runs-on: ubuntu-latest
     steps:
-      # - name: Set up GitHub CLI
-      #   uses: actions/setup-gh@v4
-
-      # - name: Install PowerShell
-      #   uses: PowerShell/PowerShell@v1
-      #   with:
-      #     pwsh-version: '7.2.0'
-
       - name: Run PowerShell to clone and fork
         shell: pwsh
         env:
@@ -55,7 +47,7 @@ jobs:
           $numForks = [int]('${{ github.event.inputs.num_forks }}')
           $prefix = '${{ github.event.inputs.name_prefix }}'
           $org = '${{ github.event.inputs.org }}'
-          $repoUrl = '${{ github.event.inputs.repo_url }}'
+          $repo = '${{ github.event.inputs.repo }}'
 
           # Clone the repo
           git clone $repoUrl
@@ -64,19 +56,13 @@ jobs:
             $suffix = $i.ToString('000')
             $forkName = "$prefix-$suffix"
             echo "Creating fork: $forkName"
-            gh repo fork Forrester-Wave-Demo-Q3-2025/WebGoat --org $org --name $forkName --clone=false --remote=false
+            gh repo fork $repo --org $org --fork-name $forkName --clone=false --remote=false
 
             # Wait for a moment to ensure the fork is fully created
             echo "Waiting for fork to be fully ready..."
             Start-Sleep -Seconds 3
             
-            # Try to set custom property, but don't fail if it's not available (beta feature)
+            # Set custom property 'repo-type' to 'synthetic' - will fail if not available
             echo "Setting custom property 'repo-type' to 'synthetic' for $org/$forkName"
-            try {
-                gh api --method PATCH -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/$org/$forkName/properties/values" -f "properties[][property_name]=repo-type" -f "properties[][value]=synthetic" -f silent=true 2>$null
-                echo "Custom property set successfully"
-            } catch {
-                echo "Custom properties API not available, setting a topic instead"
-                gh api --method PUT -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/$org/$forkName/topics" -f "names[]=[\"synthetic\"]" 
-            }
+            gh api --method PATCH -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/$org/$forkName/properties/values" -f "properties[][property_name]=repo-type" -f "properties[][value]=synthetic"
           }

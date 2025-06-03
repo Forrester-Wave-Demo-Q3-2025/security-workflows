@@ -14,10 +14,8 @@
 # in the organization and manage repository properties.
 # -------------------------------------------------------------
 name: Fork Repo
-permissions:
-  contents: read
-  administration: write
-  metadata: read
+permissions: {}
+
 
 on:
   workflow_dispatch:

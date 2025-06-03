@@ -48,40 +48,28 @@ jobs:
           $prefix = '${{ github.event.inputs.name_prefix }}'
           $org = '${{ github.event.inputs.org }}'
           $repo = '${{ github.event.inputs.repo }}'
+
+          git clone --bare "https://github.com/$repo.git"
+          cd "$repo.git"
           
           # Loop through and create each repository
           for ($i = 1; $i -le $numForks; $i++) {
             $suffix = $i.ToString('000')
             $forkName = "$prefix-$suffix"
-            echo "Creating repo: $forkName"
-            
-            # Create a temporary directory for this iteration
-            $tempDir = "temp-repo-$forkName"
-            New-Item -ItemType Directory -Path $tempDir -Force
-            
-            # Clone only the main branch of the source repository
-            echo "Cloning source repository: $repo"
-            git clone --depth 1 https://github.com/$repo.git $tempDir
-            
-            # Navigate to the cloned directory
-            Push-Location $tempDir
-            
+
             # Create a new empty repository
             echo "Creating new repo: $org/$forkName"
             gh repo create "$org/$forkName" --internal
-            
-            # Add the new repo as a remote
-            git remote set-url origin "https://${env:GH_TOKEN}@github.com/$org/$forkName.git"
-            
+
             # Push to the repository
             echo "Pushing to $org/$forkName"
-            git push -u origin main
-            
+            git push --mirror "https://github.com/$org/$forkName.git"
+
+            # Set default branch to main
+            echo "Setting default branch to main for $org/$forkName"
+            gh repo edit $org/$forkName --default-branch main
+
             # Set custom property 'repo-type' to 'synthetic' - will fail if not available
             echo "Setting custom property 'repo-type' to 'synthetic' for $org/$forkName"
-            gh api --method PATCH -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/$org/$forkName/properties/values" -f "properties[][property_name]=repo-type" -f "properties[][value][]=synthetic"
-            
-            # Return to original directory and clean up
-            Pop-Location
-            Remove-Item -Recurse -Force $tempDir
+            gh api --method PATCH -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "/repos/$org/$forkName/properties/values" -f "properties[][property_name]=repo-type" -f "properties[][value][]=synthetic"            
           }

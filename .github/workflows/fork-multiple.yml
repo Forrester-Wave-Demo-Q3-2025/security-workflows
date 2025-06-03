@@ -70,8 +70,8 @@ jobs:
             echo "Creating new repo: $org/$forkName"
             gh repo create "$org/$forkName" --internal
             
-            # Add the new repo as a remote and push to it
-            git remote add target$i "https://github.com/$org/$forkName.git"
+            # Add the new repo as a remote with authentication token and push to it
+            git remote add target$i "https://${env:GH_TOKEN}@github.com/$org/$forkName.git"
             git push target$i HEAD:main -f
             
             # Set custom property 'repo-type' to 'synthetic' - will fail if not available

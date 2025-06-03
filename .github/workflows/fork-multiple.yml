@@ -30,7 +30,7 @@ on:
         description: 'Target organization for forks'
         required: true
         default: 'Forrester-Wave-Demo-Q3-2025'
-      repo:
+      nwo:
         description: 'Repository org/repo to fork'
         required: false
         default: 'Forrester-Wave-Demo-Q3-2025/WebGoat'
@@ -47,10 +47,13 @@ jobs:
           $numForks = [int]('${{ github.event.inputs.num_forks }}')
           $prefix = '${{ github.event.inputs.name_prefix }}'
           $org = '${{ github.event.inputs.org }}'
-          $repo = '${{ github.event.inputs.repo }}'
-
-          git clone --bare "https://github.com/$repo.git"
-          cd "$repo.git"
+          $nwo = '${{ github.event.inputs.nwo }}'
+          
+          # Extract just the repository name from the full repo path (org/repo)
+          $repoName = $nwo.Split('/')[-1]
+          
+          git clone --bare "https://github.com/$nwo.git"
+          cd "${repoName}.git"
           
           # Loop through and create each repository
           for ($i = 1; $i -le $numForks; $i++) {
@@ -63,7 +66,7 @@ jobs:
 
             # Push to the repository
             echo "Pushing to $org/$forkName"
-            git push --mirror "https://github.com/$org/$forkName.git"
+            git push --mirror "https://$env:GH_TOKEN@github.com/$org/$forkName.git"
 
             # Set default branch to main
             echo "Setting default branch to main for $org/$forkName"

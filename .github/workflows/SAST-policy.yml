@@ -3,7 +3,7 @@ permissions: {}
 on: [pull_request]
 
 jobs:
-  fork-repo:
+  validate-policy:
     runs-on: ubuntu-latest
     steps:
       - name: Validate SAST Security Policy on open alerts in backlog

@@ -1,0 +1,27 @@
+name: SAST Policy Check
+permissions: {}
+on: [pull_request]
+
+jobs:
+  fork-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate SAST Security Policy on open alerts in backlog
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.SAST_POLICY_TOKEN }}
+        run: |
+
+          $count = gh api /repos/${{ github.repository }}/code-scanning/alerts | 
+            jq '[.[] | select(
+              (.rule.security_severity_level == "critical" and ((now - (.created_at | fromdateiso8601)) > 3*24*3600)) or
+              (.rule.security_severity_level == "high" and ((now - (.created_at | fromdateiso8601)) > 30*24*3600)) or
+              (.rule.security_severity_level == "medium" and ((now - (.created_at | fromdateiso8601)) > 180*24*3600))
+            )] | length'
+            
+          Write-Host "SAST Policy violations found: $count"
+          
+          if ($count -gt 0) {
+            Write-Error "SAST Policy threshold is not met. See alerts at: https://github.com/${{ github.repository }}/security/code-scanning"
+            exit 1
+          }

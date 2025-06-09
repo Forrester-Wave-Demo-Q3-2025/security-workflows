@@ -50,9 +50,13 @@ jobs:
         run: |
           $numForks = [int]('${{ github.event.inputs.num_forks }}')
           $matrix = @{ fork = @() }
-          for ($i = 1; $i -le $numForks; $i++) {
-            $suffix = $i.ToString('000')
-            $matrix.fork += $suffix
+          if ($numForks -eq 1) {
+            $matrix.fork += ""
+          } else {
+            for ($i = 1; $i -le $numForks; $i++) {
+              $suffix = "-$($i.ToString('000'))"
+              $matrix.fork += $suffix
+            }
           }
           $jsonMatrix = ConvertTo-Json -Compress $matrix
           echo "matrix=$jsonMatrix" >> $env:GITHUB_OUTPUT
@@ -73,7 +77,7 @@ jobs:
           $prefix = '${{ github.event.inputs.name_prefix }}'
           $org = '${{ github.event.inputs.org }}'
           $nwo = '${{ github.event.inputs.nwo }}'
-          $forkName = "$prefix-$suffix"
+          $forkName = "$prefix$suffix"
           
           # Extract just the repository name from the full repo path (org/repo)
           $repoName = $nwo.Split('/')[-1]

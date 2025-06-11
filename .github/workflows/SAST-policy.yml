@@ -11,7 +11,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SAST_POLICY_TOKEN }}
         run: |
-
+          # SLA Policy:
+          # - Critical: Must be addressed within 3 days.
+          # - High: Must be addressed within 30 days.
+          # - Medium: Must be addressed within 180 days.
           $count = gh api /repos/${{ github.repository }}/code-scanning/alerts?state=open --paginate  | 
             jq '[.[] | select(
               (.rule.security_severity_level == "critical" and ((now - (.created_at | fromdateiso8601)) > 3*24*3600)) or
